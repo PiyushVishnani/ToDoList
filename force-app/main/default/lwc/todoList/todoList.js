@@ -60,7 +60,7 @@ export default class TodoList extends LightningElement {
         this.newTaskDueDate = event.target.value;
     }
 
-    async handleAddTask() {
+    handleAddTask() {
         if (!this.newTaskName) {
             this.showToast('Error', 'Task name cannot be empty', 'error');
             return;
