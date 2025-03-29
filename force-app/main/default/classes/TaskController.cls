@@ -33,16 +33,20 @@ public with sharing class TaskController {
 
     @AuraEnabled
     public static void updateTaskStatus(String taskId, String newStatus){
+        System.debug('Task ID: ' + taskId);
+        System.debug('New Status: ' + newStatus);
         if(String.isBlank(taskId) || taskId.length() != 18){
             throw new AuraHandledException('Invalid Task ID');
         }
-        List<Task> tasks = [SELECT Id, Status FROM Task WHERE Id = :taskId LIMIT 1];
-        if(tasks.isEmpty()){
-            throw new AuraHandledException('Task not found');
+        try {
+            Task taskToUpdate = [SELECT Id, Status FROM Task WHERE Id = :taskId LIMIT 1];
+            taskToUpdate.Status = newStatus;
+            update taskToUpdate;
+            System.debug('Task updated successfully.');
+        } catch (Exception e) {
+            System.debug('Error updating task: ' + e.getMessage());
+            throw new AuraHandledException('Error updating task: ' + e.getMessage());
         }
-        Task taskToUpdate = tasks[0];
-        taskToUpdate.Status = newStatus;
-        update taskToUpdate;
     }
 
     @AuraEnabled

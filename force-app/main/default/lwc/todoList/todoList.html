@@ -1,37 +1,24 @@
 <template>
     <lightning-card title="To-Do List">
         <div class="container">
-
-            <div class="input">
-                <lightning-input label="Task Name" value={newTaskName} onchange={handleTaskName}></lightning-input>
-                <lightning-input type="date" label="Due Date" value={newTaskDueDate} onchange={handleTaskDueDate}></lightning-input>
-                <lightning-button label="Add Task" onclick={handleAddTask} variant="brand"></lightning-button>
+            <div class="input-group">
+                <lightning-input class="task-input" label="Task Name" value={newTaskName} onchange={handleTaskName}></lightning-input>
+                <lightning-input class="task-input" type="date" label="Due Date" value={newTaskDueDate} onchange={handleTaskDueDate}></lightning-input>
+                <lightning-button class="add-task-btn" label="Add Task" onclick={handleAddTask} variant="brand"></lightning-button>
             </div>
 
-            <div class="filter-group">
-                <lightning-button label="Inbox" data-filter="Inbox" onclick={handleFilterChange}></lightning-button>
-                <lightning-button label="Today" data-filter="Today" onclick={handleFilterChange}></lightning-button>
-                <lightning-button label="Upcoming" data-filter="Upcoming" onclick={handleFilterChange}></lightning-button>
-                <lightning-button label="Overdue" data-filter="Overdue" onclick={handleFilterChange}></lightning-button>
-                <lightning-button label="Completed" data-filter="Completed" onclick={handleFilterChange}></lightning-button>
-            </div>
+            <c-task-filter onfilterchange={handleFilterChange}></c-task-filter>
+
+            <c-task-search onsearch={handleSearch}></c-task-search>
 
             <template if:true={filteredTasks}>
                 <template for:each={filteredTasks} for:item="task">
-                    <div key={task.Id} class="task-item">
-                        <span>{task.Subject} - {task.ActivityDate}</span>
-                        <lightning-combobox label="Status" value={task.Status} options={statusOptions} data-id={task.Id} onchange={handleStatusChange}>
-                        </lightning-combobox>
-                        <lightning-button label="Save" variant="brand" onclick={handleUpdateStatus} data-id={task.Id}></lightning-button>
-                        <lightning-button label="Delete" variant="destructive" onclick={handleDelete} data-id={task.Id}></lightning-button>
-                    </div>
+                    <c-task-item key={task.Id} task={task} ondelete={handleDelete} status-options={statusOptions} onupdatestatus={handleStatusUpdate}></c-task-item>
                 </template>
             </template>
-
             <template if:true={isTaskListEmpty}>
                 <p class="empty-message">No tasks available.</p>
             </template>
-
         </div>
     </lightning-card>
 </template>

@@ -1,6 +1,13 @@
 <template>
-    <div class="task">
-        <p>{task.Subject} - {task.ActivityDate}</p>
-        <lightning-button label="Delete" variant="destructive" onclick={handleDelete}></lightning-button>
+    <div class="task-item">
+        <div class="task-details">
+            <p><strong>Task Name:</strong> {task.Subject}</p>
+            <p><strong>Due Date:</strong> {task.ActivityDate}</p>
+        </div>
+        <div class="task-actions">
+            <lightning-combobox label="Status" value={selectedStatus} options={statusOptions} data-id={task.Id} onchange={handleStatusChange}></lightning-combobox>
+            <lightning-button label="Save" variant="brand" onclick={handleSaveStatus} data-id={task.Id}></lightning-button>
+            <lightning-button label="Delete" variant="destructive" onclick={handleDelete} data-id={task.Id}></lightning-button>
+        </div>
     </div>
 </template>

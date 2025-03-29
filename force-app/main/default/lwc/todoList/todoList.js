@@ -6,13 +6,13 @@ import deleteTask from '@salesforce/apex/TaskController.deleteTask';
 import updateTaskStatus from '@salesforce/apex/TaskController.updateTaskStatus';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-export default class TodoList extends LightningElement {
-    @track tasks = [];
-    newTaskName = '';
-    newTaskDueDate = '';
+export default class TodoList extends LightningElement{
+    @track tasks = [];  
+    @track searchedTasks = []; 
     @track filterType = 'Inbox'; 
     wiredTasksResult;
-
+    newTaskName = '';
+    newTaskDueDate = '';
     statusOptions = [
         { label: 'Not Started', value: 'Not Started' },
         { label: 'In Progress', value: 'In Progress' },
@@ -20,115 +20,114 @@ export default class TodoList extends LightningElement {
     ];
 
     @wire(getTasks, { filterType: '$filterType' })
-    wiredTasks(result) {
+    wiredTasks(result){
         this.wiredTasksResult = result;
-        
         if (result.data) {
             this.tasks = Array.isArray(result.data) ? result.data : [];
+            this.searchedTasks = [...this.tasks]; 
         } else {
             this.tasks = [];
+            this.searchedTasks = [];
         }
     }
 
-    get filteredTasks() {
-        return this.tasks?.length ? this.tasks : [];
+    get filteredTasks(){
+        return this.searchedTasks?.length ? this.searchedTasks : this.tasks;
     }
 
-    get isTaskListEmpty() {
-        return this.tasks?.length === 0;
+    get isTaskListEmpty(){
+        return this.filteredTasks.length === 0;
     }
 
-
-    handleFilterChange(event) {
-        this.filterType = event.target.dataset.filter;
+    handleFilterChange(event){
+        this.filterType = event.detail;
         this.refreshTasks();
     }
 
-    async refreshTasks() {
-        try {
-            refreshApex(this.wiredTasksResult);
-        } catch (error) {
+    handleSearch(event){
+        const searchKey = event.detail ? event.detail.toLowerCase() : '';
+        if(!this.tasks || this.tasks.length === 0){
+            return;
+        }
+        this.searchedTasks = this.tasks.filter(task =>
+            task.Subject && task.Subject.toLowerCase().includes(searchKey)
+        );
+    }
+
+    async refreshTasks(){
+        try{
+            await refreshApex(this.wiredTasksResult);
+        } catch(error){
             console.error('Error refreshing tasks:', error);
         }
     }
 
-    handleTaskName(event) {
+    handleTaskName(event){
         this.newTaskName = event.target.value.trim();
     }
 
-    handleTaskDueDate(event) {
+    handleTaskDueDate(event){
         this.newTaskDueDate = event.target.value;
     }
 
-    handleAddTask() {
-        if (!this.newTaskName) {
+    async handleAddTask(){
+        if (!this.newTaskName){
             this.showToast('Error', 'Task name cannot be empty', 'error');
             return;
         }
-
-        if (!this.newTaskDueDate) {
+        if (!this.newTaskDueDate){
             this.showToast('Error', 'Due Date is required', 'error');
             return;
         }
-
         const formattedDueDate = new Date(this.newTaskDueDate).toISOString().split('T')[0];
-
-        try {
-            createTask({ taskName: this.newTaskName, dueDate: formattedDueDate });
+        const today = new Date().toISOString().split('T')[0];
+        if (formattedDueDate < today) {
+            return this.showToast('Error', 'Due date cannot be in the past', 'error');
+        }
+        try{
+            await createTask({ taskName: this.newTaskName, dueDate: formattedDueDate });
             this.showToast('Success', 'Task added successfully', 'success');
             this.newTaskName = '';
             this.newTaskDueDate = '';
-            this.refreshTasks();
-        } catch (error) {
+            await this.refreshTasks();
+        } catch(error){
+            if (error.body && error.body.message){
+                errorMessage = error.body.message;
+            }
             this.showToast('Error', 'Failed to add task', 'error');
         }
     }
 
-    handleDelete(event) {
-        const taskId = event.currentTarget.dataset.id;
-
-        if (!taskId || taskId.length !== 18) { 
-            this.showToast('Error', 'Invalid Task ID', 'error');
-            return;
-        }
-
-        try {
-            deleteTask({ taskId });
+    async handleDelete(event){
+        const taskId = event.detail;
+        try{
+            await deleteTask({ taskId });
             this.showToast('Success', 'Task deleted successfully', 'success');
-            this.refreshTasks();
-        } catch (error) {
+            await this.refreshTasks();
+        } catch(error){
             this.showToast('Error', 'Failed to delete task', 'error');
         }
     }
 
-    handleStatusChange(event) {
-        const taskId = event.target.dataset.id;
-        const newStatus = event.target.value;
-
-        this.tasks = this.tasks.map(task => {
-            if (task.Id === taskId) {
-                return { ...task, Status: newStatus };
-            }
-            return task;
-        });
-    }
-
-    handleUpdateStatus(event) {
-        const taskId = event.target.dataset.id;
-        const updatedTask = this.tasks.find(task => task.Id === taskId);
-
-        if (!updatedTask) return;
-
-        try {
-            updateTaskStatus({ taskId, newStatus: updatedTask.Status });
-            this.showToast('Success', 'Task status updated', 'success');
-            this.refreshTasks();
-        } catch (error) {
-            this.showToast('Error', 'Failed to update task status', 'error');
+    handleStatusUpdate(event){
+        const { taskId, newStatus } = event.detail;
+        if(!taskId || !newStatus){
+            return;
         }
+        updateTaskStatus({ taskId, newStatus })
+            .then(() => {
+                this.tasks = this.tasks.map(task =>
+                    task.Id === taskId ? { ...task, Status: newStatus } : task
+                );
+                this.showToast("Success", "Task status updated successfully!", "success");
+                return this.refreshTasks();
+            })
+            .catch(error => {
+                this.showToast("Error", "Failed to update task status.", "error");
+            });
     }
-
-    showToast(title, message, variant) {
+    
+    showToast(title, message, variant){
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }
