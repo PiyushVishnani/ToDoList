@@ -1,0 +1,12 @@
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+}
+
+.search-container lightning-input {
+    flex: 1;
+    max-width: 200px;
+    margin-bottom: 0; 
+    white-space: nowrap;
+}

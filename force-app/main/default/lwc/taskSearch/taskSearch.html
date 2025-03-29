@@ -1,6 +1,6 @@
 <template>
     <div class="search-container">
-        <lightning-input type="text" label="Search Task" value={searchKey} onchange={handleSearchChange}></lightning-input>
+        <lightning-input type="text" variant="label-hidden" value={searchKey} onchange={handleSearchChange}></lightning-input>
         <lightning-button label="Search" onclick={handleSearch} variant="brand"></lightning-button>
     </div>
 </template>

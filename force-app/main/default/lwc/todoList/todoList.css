@@ -15,11 +15,8 @@
 .input lightning-input {
     flex: 1;
     min-width: 200px;
-}
-
-.input lightning-button {
     white-space: nowrap;
-}
+} 
 
 .empty-message {
     text-align: center;
