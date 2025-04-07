@@ -33,8 +33,6 @@ public with sharing class TaskController {
 
     @AuraEnabled
     public static void updateTaskStatus(String taskId, String newStatus){
-        System.debug('Task ID: ' + taskId);
-        System.debug('New Status: ' + newStatus);
         if(String.isBlank(taskId) || taskId.length() != 18){
             throw new AuraHandledException('Invalid Task ID');
         }

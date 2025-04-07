@@ -8,12 +8,8 @@ export default class TaskSearch extends LightningElement{
     }
 
     handleSearch(){
-        if(this.searchKey.trim() !== ''){
-            this.dispatchEvent(new CustomEvent('search', { 
-                detail: this.searchKey.trim(),
-                bubbles: true, 
-                composed: true 
-            }));
-        }
+        this.dispatchEvent(new CustomEvent('search', { 
+            detail: this.searchKey.trim() 
+        }));
     }
 }

@@ -1,13 +1,22 @@
 @isTest
 private class TaskControllerTest{
+    private static Task createTestTask(String subject, Date activityDate, String status){
+        Task testTask = new Task(
+            Subject = subject,
+            ActivityDate = activityDate,
+            Status = status
+        );
+        insert testTask;
+        return testTask;
+    }
+
     @isTest
     static void testGetTasks(){
-        Task t1 = new Task(Subject = 'Test Task 1', ActivityDate = Date.today(), Status = 'Not Started');
-        Task t2 = new Task(Subject = 'Test Task 2', ActivityDate = Date.today().addDays(3), Status = 'In Progress');
-        insert new List<Task>{ t1, t2 };
+        Task t1 = createTestTask('Test Task 1', Date.today(), 'Not Started');
+        Task t2 = createTestTask('Test Task 2', Date.today().addDays(3), 'In Progress');
         List<Task> tasks = TaskController.getTasks('Inbox');
-        System.assertNotEquals(0, tasks.size());
-        System.assert(tasks[0].Subject.contains('Test Task'));
+        Assert.isNotNull(tasks.size(), '2 tasks should be there');
+        Assert.isTrue(tasks[0].Subject.contains('Test Task'), 'Subject does not match');
     }
 
     @isTest
@@ -16,29 +25,27 @@ private class TaskControllerTest{
         TaskController.createTask('New Task', Date.today().addDays(2));
         Test.stopTest();
         Task insertedTask = [SELECT Id, Subject, ActivityDate, Status FROM Task WHERE Subject = 'New Task' LIMIT 1];
-        System.assertNotEquals(null, insertedTask);
-        System.assertEquals('Not Started', insertedTask.Status);
+        Assert.isNotNull(insertedTask, 'there should be a task');
+        Assert.areEqual('Not Started', insertedTask.Status, 'Task status should be Not Started');
     }
 
     @isTest
     static void testUpdateTaskStatus(){
-        Task t = new Task(Subject = 'Task to Update', ActivityDate = Date.today(), Status = 'Not Started');
-        insert t;
+        Task t = createTestTask('Task to Update', Date.today(), 'Not Started');
         Test.startTest();
         TaskController.updateTaskStatus(t.Id, 'Completed');
         Test.stopTest();
         Task updatedTask = [SELECT Status FROM Task WHERE Id = :t.Id];
-        System.assertEquals('Completed', updatedTask.Status);
+        Assert.areEqual('Completed', updatedTask.Status, 'Task status should be Completed');
     }
 
     @isTest
     static void testDeleteTask(){
-        Task t = new Task(Subject = 'Task to Delete', ActivityDate = Date.today(), Status = 'Not Started');
-        insert t;
+        Task t = createTestTask('Task to Delete', Date.today(), 'Not Started');
         Test.startTest();
         TaskController.deleteTask(t.Id);
         Test.stopTest();
         List<Task> remainingTasks = [SELECT Id FROM Task WHERE Id = :t.Id];
-        System.assertEquals(0, remainingTasks.size());
+        Assert.areEqual(0, remainingTasks.size(), 'Task should be deleted');
     }
 }

@@ -10,6 +10,8 @@ export default class TodoList extends LightningElement{
     @track tasks = [];  
     @track searchedTasks = []; 
     @track filterType = 'Inbox'; 
+    @track taskNameError = '';
+    @track dueDateError = '';
     wiredTasksResult;
     newTaskName = '';
     newTaskDueDate = '';
@@ -45,13 +47,12 @@ export default class TodoList extends LightningElement{
     }
 
     handleSearch(event){
-        const searchKey = event.detail ? event.detail.toLowerCase() : '';
-        if(!this.tasks || this.tasks.length === 0){
-            return;
-        }
-        this.searchedTasks = this.tasks.filter(task =>
+        const searchKey = event.detail ? event.detail.toLowerCase().trim() : '';
+        this.searchedTasks = searchKey
+        ? this.tasks.filter(task => 
             task.Subject && task.Subject.toLowerCase().includes(searchKey)
-        );
+        )
+        : [...this.tasks];
     }
 
     async refreshTasks(){
@@ -64,10 +65,27 @@ export default class TodoList extends LightningElement{
 
     handleTaskName(event){
         this.newTaskName = event.target.value.trim();
+        this.taskNameError = '';
+    }
+
+    validateTaskName() {
+        if (!this.newTaskName) {
+            this.taskNameError = 'Task Name cannot be empty!';
+        }
     }
 
     handleTaskDueDate(event){
         this.newTaskDueDate = event.target.value;
+        this.dueDateError = '';
+    }
+
+    validateDueDate() {
+        const today = new Date().toISOString().split('T')[0];
+        if (!this.newTaskDueDate) {
+            this.dueDateError = 'Due Date is required!';
+        } else if (this.newTaskDueDate < today) {
+            this.dueDateError = 'Due date cannot be in the past!';
+        }
     }
 
     async handleAddTask(){

@@ -2,8 +2,14 @@
     <lightning-card title="To-Do List">
         <div class="container">
             <div class="input-group">
-                <lightning-input class="task-input" label="Task Name" value={newTaskName} onchange={handleTaskName}></lightning-input>
-                <lightning-input class="task-input" type="date" label="Due Date" value={newTaskDueDate} onchange={handleTaskDueDate}></lightning-input>
+                <lightning-input class="task-input" label="Task Name" value={newTaskName} onchange={handleTaskName} onblur={validateTaskName}></lightning-input>
+                <template if:true={taskNameError}>
+                    <p class="error-message">{taskNameError}</p>
+                </template>
+                <lightning-input class="task-input" type="date" label="Due Date" value={newTaskDueDate} onchange={handleTaskDueDate} onblur={validateDueDate}></lightning-input>
+                <template if:true={dueDateError}>
+                    <p class="error-message">{dueDateError}</p>
+                </template>
                 <lightning-button class="add-task-btn" label="Add Task" onclick={handleAddTask} variant="brand"></lightning-button>
             </div>
 
